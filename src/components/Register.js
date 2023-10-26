@@ -11,6 +11,7 @@ import { useHistory, Link } from "react-router-dom";
 
 const Register = () => {
   const { enqueueSnackbar } = useSnackbar();
+  const history = useHistory()
 
   const [loading, setLoading] = useState(false);
   const [registerForm, setRegisterForm] = useState({
@@ -60,6 +61,7 @@ const Register = () => {
        enqueueSnackbar("Registered Successfully", {
          variant: "success"
        })
+       history.push('/login')
      } catch(e) {
        console.log(e.response.status)
        if (e.response && e.response.status === 400) {
@@ -172,9 +174,9 @@ const Register = () => {
            
           <p className="secondary-action">
             Already have an account?{" "}
-             <a className="link" href="#">
+             <Link className="link" to="/login">
               Login here
-             </a>
+             </Link>
           </p>
         </Stack>
       </Box>
