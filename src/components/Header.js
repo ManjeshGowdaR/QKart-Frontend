@@ -34,6 +34,7 @@ const Header = ({ children, hasHiddenAuthButtons }) => {
       <Box className="header-title">
           <img src="logo_light.svg" alt="QKart-icon"></img>
       </Box>
+      {children}
       <Box>
        {localStorage.getItem('token') ? <Stack flexDirection="row" spacing ={1} alignItems='center'>
        <Avatar  

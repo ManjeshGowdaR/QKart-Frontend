@@ -1,3 +1,4 @@
+import { ComponentSelector } from "@emotion/react";
 import { Search, SentimentDissatisfied } from "@mui/icons-material";
 import {
   CircularProgress,
@@ -12,6 +13,7 @@ import React, { useEffect, useState } from "react";
 import { config } from "../App";
 import Footer from "./Footer";
 import Header from "./Header";
+import ProductCard from "./ProductCard";
 import "./Products.css";
 
 // Definition of Data Structures used
@@ -28,6 +30,11 @@ import "./Products.css";
 
 
 const Products = () => {
+
+  const { enqueueSnackbar } = useSnackbar();
+  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState([]);
+  const [debounceTimer, setDebounceTimer] = useState(null);
 
   // TODO: CRIO_TASK_MODULE_PRODUCTS - Fetch products data and store it
   /**
@@ -67,7 +74,28 @@ const Products = () => {
    * }
    */
   const performAPICall = async () => {
+    try {
+      let res = await axios.get(`${config.endpoint}/products`)
+      return res.data
+    } catch(e) {
+      // console.log(e)
+      if (e.response && e.response.status === 400) {
+        enqueueSnackbar("Something went wrong, Check if the proper link used", { variant: "error"});
+      } else {
+        enqueueSnackbar('Something went wrong. Check that the backend is running, reachable and returns valid JSON', { variant: "error"});
+      }
+    }
   };
+
+  useEffect(() => {
+    performAPICall()
+    .then(data => {
+      setProducts(data)
+    })
+    .finally(() => {
+      setLoading(false)
+    })
+  }, [])
 
   // TODO: CRIO_TASK_MODULE_PRODUCTS - Implement search logic
   /**
@@ -84,6 +112,18 @@ const Products = () => {
    *
    */
   const performSearch = async (text) => {
+    try {
+      let res = await axios.get(`${config.endpoint}/products/search?value=${text}`)
+      setProducts(res.data)
+    } catch (e) {
+      //
+      if (e.response.status === 404) {
+        setProducts([])
+        // enqueueSnackbar("Could Not List the Products", { variant: "error"});
+      } else {
+        enqueueSnackbar('Something went wrong. Check that the backend is running, Could Not List the Products', { variant: "error"});
+      }
+    }
   };
 
   // TODO: CRIO_TASK_MODULE_PRODUCTS - Optimise API calls with debounce search implementation
@@ -99,6 +139,14 @@ const Products = () => {
    *
    */
   const debounceSearch = (event, debounceTimeout) => {
+
+    clearTimeout(debounceTimeout)
+
+    let timerId = setTimeout(() => {
+       performSearch(event.target.value)
+    }, 500)
+
+    setDebounceTimer(timerId)
   };
 
 
@@ -111,7 +159,22 @@ const Products = () => {
     <div>
       <Header>
         {/* TODO: CRIO_TASK_MODULE_PRODUCTS - Display search bar in the header for Products page */}
-
+        <TextField
+          className="search-desktop"
+          size="small"
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <Search color="primary" />
+              </InputAdornment>
+            ),
+          }}
+          placeholder="Search for items/categories"
+          name="search"
+          onChange={e => {
+            debounceSearch(e, debounceTimer)
+          }}
+        />
       </Header>
 
       {/* Search view for mobiles */}
@@ -126,6 +189,9 @@ const Products = () => {
             </InputAdornment>
           ),
         }}
+        onChange={e => {
+          debounceSearch(e, debounceTimer)
+        }}
         placeholder="Search for items/categories"
         name="search"
       />
@@ -138,7 +204,22 @@ const Products = () => {
              </p>
            </Box>
          </Grid>
-       </Grid>
+       </Grid> 
+
+       {loading ? <Box className="loading">
+          <CircularProgress />
+          <h4>Loading Products...</h4>
+        </Box> :
+       <Grid container paddingX={1} marginY={1} spacing={1}>
+        {products.length ? products.map(product => <Grid key={product._id} item xs={6} lg={3}>
+          <ProductCard
+            product={product}
+          />
+        </Grid>) : <Box className="loading">
+          <SentimentDissatisfied />
+          <h4>No products found</h4>
+        </Box>}
+       </Grid>}
       <Footer />
     </div>
   );
