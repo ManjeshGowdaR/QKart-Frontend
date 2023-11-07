@@ -89,14 +89,14 @@ const Login = () => {
 
     if(data.username === '') {
       enqueueSnackbar("Username is a required field", { variant: "warning"});
-      return false
+      return false;
     }
     if(data.password === '') {
       enqueueSnackbar("Password is a required field", { variant: "warning"});
-      return false
+      return false;
     }
 
-    return true
+    return true;
   };
 
   // TODO: CRIO_TASK_MODULE_LOGIN - Persist user's login information
